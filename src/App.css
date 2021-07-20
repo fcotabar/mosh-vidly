@@ -36,3 +36,24 @@
     transform: rotate(360deg);
   }
 }
+
+.movies__container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.movies__genres {
+  width: 250px;
+  margin-right: 30px;
+}
+
+.movies__list {
+  width: 100%;
+}
+
+.liked-heart,
+.list-group-item,
+.movies-header {
+  cursor: pointer !important;
+}
