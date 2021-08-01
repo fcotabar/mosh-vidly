@@ -2,9 +2,10 @@ import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 
 import _ from 'lodash';
+import { toast } from 'react-toastify';
 
-import { getMovies } from '../services/fakeMovieService';
-import { getGenres } from '../services/fakeGenreService';
+import { getMovies, deleteMovie } from '../services/movieService';
+import { getGenres } from '../services/genreService';
 import { paginate } from '../utils/paginate';
 
 // import Like from '../common/Like';
@@ -24,15 +25,28 @@ class Movies extends Component {
     sortColumn: { path: 'title', order: 'asc' },
   };
 
-  componentDidMount() {
-    this.setState({ movies: getMovies(), genres: getGenres() });
+  async componentDidMount() {
+    const { data } = await getGenres();
+    const genres = [...data];
+
+    const { data: movies } = await getMovies();
+    this.setState({ movies, genres });
   }
 
-  handleDelete = (movie) => {
+  handleDelete = async (movie) => {
     // deleteMovie();
     // console.log(movie);
+    const originalMovies = this.state.movies;
+
     const movies = this.state.movies.filter((m) => m._id !== movie._id);
     this.setState({ movies });
+
+    try {
+      await deleteMovie(movie._id);
+    } catch (err) {
+      toast.error('This movie has already been deleted.');
+      this.setState({ movies: originalMovies });
+    }
   };
 
   handleLike = (movie) => {
@@ -122,6 +136,8 @@ class Movies extends Component {
     if (count === 0) return <p>No movies in the databaes to show</p>;
 
     const { totalCount, data: movies } = this.getPageData();
+    const {user } = this.props;
+    // console.log(this.props);
 
     return (
       <div className="movies__container">
@@ -133,9 +149,11 @@ class Movies extends Component {
           />
         </div>
         <div className="movies__list">
-          <Link to="/movies/new" className="btn btn-primary mb-2">
-            New movie
-          </Link>
+          {user && (
+            <Link to="/movies/new" className="btn btn-primary mb-2">
+              New movie
+            </Link>
+          )}
           <p>Showing {totalCount} movies</p>
 
           <SearchBox value={searchQuery} onChange={this.handleSearch} />
@@ -146,6 +164,7 @@ class Movies extends Component {
             onDelete={this.handleDelete}
             onSort={this.handleSort}
             sortColumn={sortColumn}
+            user={user}
           />
 
           <Pagination
